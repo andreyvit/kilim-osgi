@@ -5,6 +5,7 @@
  */
 package kilim.analysis;
 import kilim.*;
+import kilim.osgi.InstrumentationContext;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,12 +41,18 @@ public class ClassFlow extends ClassNode {
     
     Map<String, MethodFlow> methodsByName = new HashMap<String, MethodFlow>();
     
-    public ClassFlow(InputStream is) throws IOException {
-        cr = new ClassReader(is);
+	private final InstrumentationContext context;
+    
+    public ClassFlow(InputStream is, InstrumentationContext context) throws IOException {
+		cr = new ClassReader(is);
+		this.context = context;
+		this.context.setClassFlow(this);
     }
     
-    public ClassFlow(String aClassName) throws IOException {
-        cr = new ClassReader(aClassName);
+    public ClassFlow(String aClassName, InstrumentationContext context) throws IOException {
+		cr = new ClassReader(aClassName);
+		this.context = context;
+		this.context.setClassFlow(this);
     }
     
     @SuppressWarnings({"unchecked"})
@@ -57,9 +64,9 @@ public class ClassFlow extends ClassNode {
             final String[] exceptions)
     {
         MethodFlow mn = new MethodFlow( this, access, name,  desc, signature,
-                exceptions);
+                exceptions, context);
         super.methods.add(mn);
-        methodsByName.put(name, mn);
+        methodsByName.put(name + "|" + desc, mn);
         return mn;
     }
     

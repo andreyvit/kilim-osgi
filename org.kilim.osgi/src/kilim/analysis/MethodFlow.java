@@ -7,6 +7,8 @@
 package kilim.analysis;
 
 import kilim.*;
+import kilim.osgi.AlreadyBeingInstrumentedError;
+import kilim.osgi.InstrumentationContext;
 
 import static kilim.analysis.BasicBlock.COALESCED;
 import static kilim.analysis.BasicBlock.ENQUEUED;
@@ -81,8 +83,11 @@ public class MethodFlow extends MethodNode {
 
 	private List<MethodInsnNode> allMethods = new ArrayList<MethodInsnNode>();
 
+	private final InstrumentationContext context;
+
 	public MethodFlow(ClassFlow classFlow, final int access, final String name,
-			final String desc, final String signature, final String[] exceptions) {
+			final String desc, final String signature,
+			final String[] exceptions, InstrumentationContext context) {
 		super(access, name, desc, signature, exceptions);
 		this.classFlow = classFlow;
 		int numInstructions = instructions.size();
@@ -93,6 +98,7 @@ public class MethodFlow extends MethodNode {
 		labelToPosMap = new HashMap<Label, Integer>(numInstructions * 2);
 		labelToBBMap = new HashMap<Label, BasicBlock>(numInstructions);
 		hasPausableAnnotation = false;
+		this.context = context;
 	}
 
 	public void analyze() throws KilimException {
@@ -195,37 +201,54 @@ public class MethodFlow extends MethodNode {
 	}
 
 	private void checkPausable(MethodInsnNode min) throws AssertionError {
-		// The only reason for adding to pausableMethods is to create a BB for pausable
-        // method call sites. If the class is already woven, we don't need this 
-        // functionality.
-        if (!classFlow.isWoven()) {
-        	int methodStatus = checkPausabilityOf(min.owner, min);
-            if (methodStatus == Detector.METHOD_NOT_FOUND) {
-                throw new KilimException("Check classpath. Method " + min.owner + min.name + min.desc + " could not be located");
-            } else if (methodStatus == Detector.PAUSABLE_METHOD_FOUND) {
-                pausableMethods.add(min);
-            }
-        }
+		// The only reason for adding to pausableMethods is to create a BB for
+		// pausable
+		// method call sites. If the class is already woven, we don't need this
+		// functionality.
+		if (!classFlow.isWoven()) {
+			int methodStatus = checkPausabilityOf(min.owner, min);
+			if (methodStatus == Detector.METHOD_NOT_FOUND) {
+				throw new KilimException("Check classpath. Method " + min.owner
+						+ min.name + min.desc + " could not be located");
+			} else if (methodStatus == Detector.PAUSABLE_METHOD_FOUND) {
+				pausableMethods.add(min);
+			}
+		}
 	}
 
 	private int checkPausabilityOf(String ownerName, MethodInsnNode min)
 			throws AssertionError {
-		int methodStatus = Detector.getPausableStatus(ownerName, min.name, min.desc);
-		if (methodStatus == Detector.METHOD_NOT_FOUND) {
-			if (classFlow.name.equals(ownerName)) {
-				MethodFlow mf = classFlow.methodsByName.get(min.name);
-				if (mf == null) {
-					String sup = classFlow.superName;
-					if (sup != null)
-						return checkPausabilityOf(sup, min);
-					throw new AssertionError(min.owner + "." + min.name + " not found in the class being weaven");
-				}
-				methodStatus = Detector.METHOD_NOT_PAUSABLE;
-				for (Object obj : mf.invisibleAnnotations) {
-					System.out.println(obj.getClass().getName());
-				}
+//		System.out.println("MethodFlow.checkPausabilityOf(" + min.owner + "."
+//				+ min.name + ")");
+		ClassFlow cf = context.findClassFlow(ownerName);
+		int methodStatus = Detector.METHOD_NOT_FOUND;
+		if (cf == null)
+			try {
+				methodStatus = Detector.getPausableStatus(ownerName, min.name,
+						min.desc);
+			} catch (AlreadyBeingInstrumentedError e) {
+				cf = context.findClassFlow(ownerName);
 			}
+		if (methodStatus == Detector.METHOD_NOT_FOUND) {
+			MethodFlow mf = cf.methodsByName.get(min.name + "|" + min.desc);
+			if (mf == null) {
+				String sup = cf.superName;
+				if (sup != null)
+					return checkPausabilityOf(sup, min);
+				throw new AssertionError(min.owner + "." + min.name
+						+ " not found in the class being weaven");
+			}
+			methodStatus = Detector.METHOD_NOT_PAUSABLE;
+			if (mf.visibleAnnotations != null)
+				for (Object obj : mf.visibleAnnotations) {
+					AnnotationNode an = (AnnotationNode) obj;
+					if (an.desc.equals(Constants.D_PAUSABLE)) {
+						methodStatus = Detector.PAUSABLE_METHOD_FOUND;
+						break;
+					}
+				}
 		}
+//		System.out.println("</MethodFlow.checkPausabilityOf()>");
 		return methodStatus;
 	}
 

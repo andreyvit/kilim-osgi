@@ -6,6 +6,7 @@
 
 package kilim.analysis;
 import kilim.*;
+import kilim.osgi.InstrumentationContext;
 import static kilim.Constants.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,13 +32,13 @@ public class ClassWeaver {
     List<ClassInfo> classInfoList = new LinkedList<ClassInfo>();
     static HashSet<String> stateClasses = new HashSet<String>();
 
-    public ClassWeaver(InputStream is) throws IOException {
-        classFlow = new ClassFlow(is);
+    public ClassWeaver(InputStream is, InstrumentationContext context) throws IOException {
+		classFlow = new ClassFlow(is, context);
         weave();
     }
     
-    public ClassWeaver(String className) throws IOException {
-        classFlow = new ClassFlow(className);
+    public ClassWeaver(String className, InstrumentationContext context) throws IOException {
+		classFlow = new ClassFlow(className, context);
         weave();
     }
     
@@ -207,7 +208,7 @@ public class ClassWeaver {
 
     private String makeClassName(int[] numByType) {
         StringBuilder sb = new StringBuilder(30);
-        sb.append("kilim/S_");
+        sb.append("kilim/states/S_");
         for (int t = 0; t < 5; t++) {
             int c = numByType[t];
             if (c == 0)

@@ -319,7 +319,9 @@ public class MethodWeaver {
         if (callWeavers.size() == 0) {
             // Can happen if Task.getCurrentTask() is the only pausable method
             // call. We don't need the rest of the prelude.
-            return; 
+        	
+        	// XXX this seems like a bug to me, at least was causing a VerifyError -- andreyvit@gmail.com
+//            return; 
         }
         mv.visitVarInsn(ALOAD, lastVar);
         if (lastVar < fiberVar) {

@@ -17,8 +17,8 @@ public class SimpleTask2Test {
         SimpleTask2.mb.putnb("World\n");
         SimpleTask2.mb.putnb("done");
         
-        String msg = SimpleTask2.exitmb.getb().result.toString();
-        Assert.assertEquals("Hurray", msg);
+        Object result = SimpleTask2.exitmb.getb().result;
+        Assert.assertEquals("Hurray", result.toString());
 	}
 
 

@@ -57,6 +57,7 @@ public class Detector {
     public static Method findMethodInHierarchy(Class cl, String methodName,
             String desc) {
         if (cl == null)  return null;
+//        System.out.println("Detector.findMethodInHierarchy(" + cl.getSimpleName() + "." + methodName +")");
         
         for (Method om : cl.getDeclaredMethods()) {
             if (om.getName().equals(methodName) && Type.getMethodDescriptor(om).equals(desc)) {

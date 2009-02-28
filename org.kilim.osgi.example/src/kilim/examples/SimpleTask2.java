@@ -41,7 +41,8 @@ public class SimpleTask2 extends Task {
     public void execute() {
         while (true) {
             String s = mb.get();
-            if (s.equals("done")) break;
+            if (s.equals("done"))
+            	break;
             System.out.print(s);
         }
         Task.exit("Hurray"); // Strictly optional.
