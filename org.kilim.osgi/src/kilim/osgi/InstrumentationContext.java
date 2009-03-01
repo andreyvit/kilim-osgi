@@ -47,9 +47,9 @@ public class InstrumentationContext {
 	public Class<?> loadClass(String name) throws ClassNotFoundException {
 		if (isBeingInstrumented(name))
 			throw new ClassNotFoundException("It's being instrumented, dude!");
-		System.out.println("Loading " + name + " from " + bundle.getSymbolicName());
-		if (name.equals("com.esko.dtl.core.runtime.DtlMethod"))
-			System.out.println("InstrumentationContext.loadClass(): breakpoint");
+//		System.out.println("Loading " + name + " from " + bundle.getSymbolicName());
+//		if (name.equals("com.esko.dtl.core.runtime.DtlMethod"))
+//			System.out.println("InstrumentationContext.loadClass(): breakpoint");
 		Class<?> klass = bundle.loadClass(name);
 //		try {
 //			klass.getDeclaredMethods();
