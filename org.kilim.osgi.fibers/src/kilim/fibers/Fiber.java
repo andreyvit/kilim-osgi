@@ -56,9 +56,10 @@ public final class Fiber {
     boolean                    isDone;
 
     /*
-     * The task to which this Fiber belongs
+     * The task to which this Fiber belongs; this field is public because
+     * it is read from the instrumented byte code.
      */
-    Task                      task;
+    public final Task          task;
 
     /*
      * Special marker state used by pause
