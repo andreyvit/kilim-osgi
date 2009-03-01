@@ -8,9 +8,12 @@ import java.lang.reflect.Method;
 
 import kilim.Constants;
 import kilim.pausable;
+import kilim.osgi.AlreadyBeingInstrumentedError;
+import kilim.osgi.InstrumentationContext;
 import kilim.osgi.InstrumentationHook;
 
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AnnotationNode;
 /**
  * Utility class to check if a method has been marked pausable
 
@@ -26,8 +29,8 @@ public class Detector {
             "java.", "javax."                                         };
 
     public static boolean isPausable(String className, String methodName,
-            String desc) {
-        return getPausableStatus(className, methodName, desc) == PAUSABLE_METHOD_FOUND;
+            String desc, InstrumentationContext context) {
+        return getPausableStatus(className, methodName, desc, context) == PAUSABLE_METHOD_FOUND;
     }
 
     /**
@@ -35,23 +38,63 @@ public class Detector {
      */
     
     public static int getPausableStatus(String className, String methodName,
-            String desc) 
+            String desc, InstrumentationContext context) 
     {
         int ret = METHOD_NOT_FOUND;
         if (methodName.endsWith("init>")) {
             return METHOD_NOT_PAUSABLE; // constructors are not pausable.
         }
-        className = className.replace('/', '.');
-        try {
-            Class cl = InstrumentationHook.loadClass(className);
-            Method m = findMethodInHierarchy(cl, methodName, desc);
+        if (methodName.equals("staticContext"))
+        	System.out.println("Detector.getPausableStatus()");
+        ClassFlow cf = context.findClassFlow(className);
+        if (cf == null) {
+        	try {
+        		String dottedClassName = className.replace('/', '.');
+        		try {
+        			Class cl = InstrumentationHook.loadClass(dottedClassName);
+        	        cf = context.findClassFlow(className);
+        			if (cf == null) {
+        				Method m = findMethodInHierarchy(cl, methodName, desc);
 
-            if (m != null) {
-                ret = m.isAnnotationPresent(pausable.class) ? 
-                            PAUSABLE_METHOD_FOUND : METHOD_NOT_PAUSABLE;
-            }
-         } catch (ClassNotFoundException ignore) {}
-         return ret;
+        				if (m != null) {
+        					ret = m.isAnnotationPresent(pausable.class) ? 
+        							PAUSABLE_METHOD_FOUND : METHOD_NOT_PAUSABLE;
+        				}
+        			}
+        		} catch (ClassNotFoundException ignore) {}
+        	} catch (AlreadyBeingInstrumentedError e) {
+        		cf = context.findClassFlow(className);
+        	}
+        }
+		if (ret == Detector.METHOD_NOT_FOUND && cf != null) {
+			MethodFlow mf = cf.methodsByName.get(methodName + "|" + desc);
+			if (mf == null) {
+				String sup = cf.superName;
+				if (sup != null) {
+					ret = getPausableStatus(sup, methodName, desc, context);
+					if (ret != METHOD_NOT_FOUND)
+						return ret;
+				}
+				if (cf.interfaces != null)
+					for (Object n : cf.interfaces) {
+						String name = (String) n;
+						ret = getPausableStatus(name, methodName, desc, context);
+						if (ret != METHOD_NOT_FOUND)
+							return ret;
+					}
+				return METHOD_NOT_FOUND;
+			}
+			ret = Detector.METHOD_NOT_PAUSABLE;
+			if (mf.visibleAnnotations != null)
+				for (Object obj : mf.visibleAnnotations) {
+					AnnotationNode an = (AnnotationNode) obj;
+					if (an.desc.equals(Constants.D_PAUSABLE)) {
+						ret = Detector.PAUSABLE_METHOD_FOUND;
+						break;
+					}
+				}
+		}
+		return ret;
     }
     
     public static Method findMethodInHierarchy(Class cl, String methodName,

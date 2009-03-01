@@ -47,7 +47,17 @@ public class InstrumentationContext {
 	public Class<?> loadClass(String name) throws ClassNotFoundException {
 		if (isBeingInstrumented(name))
 			throw new ClassNotFoundException("It's being instrumented, dude!");
-		return bundle.loadClass(name);
+		System.out.println("Loading " + name + " from " + bundle.getSymbolicName());
+		if (name.equals("com.esko.dtl.core.runtime.DtlMethod"))
+			System.out.println("InstrumentationContext.loadClass(): breakpoint");
+		Class<?> klass = bundle.loadClass(name);
+//		try {
+//			klass.getDeclaredMethods();
+//		} catch (LinkageError e) {
+//			System.out.println("InstrumentationContext.loadClass(" + name + "): LinkageError " + e.getMessage());
+//			System.out.println();
+//		}
+		return klass;
 	}
 
 	public ClassFlow findClassFlow(String name) {

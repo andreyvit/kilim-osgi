@@ -39,7 +39,7 @@ public class ClassFlow extends ClassNode {
      */
     private boolean isWoven = false;
     
-    Map<String, MethodFlow> methodsByName = new HashMap<String, MethodFlow>();
+    final Map<String, MethodFlow> methodsByName = new HashMap<String, MethodFlow>();
     
 	private final InstrumentationContext context;
     

@@ -147,7 +147,7 @@ public class MethodFlow extends MethodNode {
 	private void checkStatus(String superClassName, String methodName,
 			String desc) throws KilimException {
 		int status = Detector.getPausableStatus(superClassName, methodName,
-				desc);
+				desc, context);
 		if ((status == Detector.PAUSABLE_METHOD_FOUND && !hasPausableAnnotation)) {
 			throw new KilimException(
 					"Base class method is pausable, derived class is not: "
@@ -220,34 +220,8 @@ public class MethodFlow extends MethodNode {
 			throws AssertionError {
 //		System.out.println("MethodFlow.checkPausabilityOf(" + min.owner + "."
 //				+ min.name + ")");
-		ClassFlow cf = context.findClassFlow(ownerName);
-		int methodStatus = Detector.METHOD_NOT_FOUND;
-		if (cf == null)
-			try {
-				methodStatus = Detector.getPausableStatus(ownerName, min.name,
-						min.desc);
-			} catch (AlreadyBeingInstrumentedError e) {
-				cf = context.findClassFlow(ownerName);
-			}
-		if (methodStatus == Detector.METHOD_NOT_FOUND) {
-			MethodFlow mf = cf.methodsByName.get(min.name + "|" + min.desc);
-			if (mf == null) {
-				String sup = cf.superName;
-				if (sup != null)
-					return checkPausabilityOf(sup, min);
-				throw new AssertionError(min.owner + "." + min.name
-						+ " not found in the class being weaven");
-			}
-			methodStatus = Detector.METHOD_NOT_PAUSABLE;
-			if (mf.visibleAnnotations != null)
-				for (Object obj : mf.visibleAnnotations) {
-					AnnotationNode an = (AnnotationNode) obj;
-					if (an.desc.equals(Constants.D_PAUSABLE)) {
-						methodStatus = Detector.PAUSABLE_METHOD_FOUND;
-						break;
-					}
-				}
-		}
+		int methodStatus = Detector.getPausableStatus(ownerName, min.name,
+						min.desc, context);
 //		System.out.println("</MethodFlow.checkPausabilityOf()>");
 		return methodStatus;
 	}
