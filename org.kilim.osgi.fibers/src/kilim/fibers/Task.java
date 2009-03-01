@@ -186,7 +186,7 @@ public abstract class Task implements Runnable {
         f.togglePause();
     }
 
-    private static void errNotWoven() {
+    public static void errNotWoven() {
         System.err.println("############################################################");
         System.err.println("Task has either not been woven or the classpath is incorrect");
         System.err.println("############################################################");
@@ -194,7 +194,7 @@ public abstract class Task implements Runnable {
         System.exit(0);
     }
     
-    private static void errNotWoven(Task t) {
+    public static void errNotWoven(Task t) {
         System.err.println("############################################################");
         System.err.println("Task " + t.getClass() + " has either not been woven or the classpath is incorrect");
         System.err.println("############################################################");
