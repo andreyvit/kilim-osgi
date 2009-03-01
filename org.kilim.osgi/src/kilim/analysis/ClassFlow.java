@@ -17,6 +17,7 @@ import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 
 /**
  * This class reads a .class file (or stream), wraps each method with a MethodFlow
@@ -90,9 +91,11 @@ public class ClassFlow extends ClassNode {
         for (Object o: methods) {
             MethodFlow mf = (MethodFlow)o;
             if (mf.isBridge()) {
-                MethodFlow mmf = getOrigWithSameSig(mf);
-                if (mmf != null)
-                    mf.setPausable(mmf.isPausable());
+            	MethodInsnNode node = mf.findOnlyCallInstruction();
+            	if (node != null)
+            		mf.setPausable(Detector.isPausable(node.owner, node.name, node.desc, context));
+            	else 
+            		System.out.println("ClassFlow[" + name +"].analyze(): multiple calls in a bridge method " + mf.name + " " + mf.desc);
             }
             mf.verifyPausables();
             if (mf.isPausable()) isPausable = true;
@@ -103,21 +106,6 @@ public class ClassFlow extends ClassNode {
         }
         methodFlows = flows;
         return flows;
-    }
-    
-    private MethodFlow getOrigWithSameSig(MethodFlow bridgeMethod) {
-        for (Object o:methods) {
-            MethodFlow mf = (MethodFlow)o;
-            if (mf == bridgeMethod) continue;
-            if (mf.name.equals(bridgeMethod.name)) {
-                String mfArgs = mf.desc.substring(0,mf.desc.indexOf(')'));
-                String bmArgs = bridgeMethod.desc.substring(0,bridgeMethod.desc.indexOf(')'));
-                if (mfArgs.equals(bmArgs)) return mf;
-            }
-        }
-        return null;
-//        throw new AssertionError("Bridge method found, but original method does not exist\nBridge method:" +
-//                this.name + "::" + bridgeMethod.name + bridgeMethod.desc);
     }
     
     public String getClassDescriptor() { return classDesc; }

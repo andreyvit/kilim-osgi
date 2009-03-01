@@ -79,7 +79,7 @@ public class MethodFlow extends MethodNode {
 
 	private boolean hasPausableAnnotation;
 
-	private List<MethodInsnNode> pausableMethods = new LinkedList<MethodInsnNode>();
+	public final List<MethodInsnNode> pausableMethods = new LinkedList<MethodInsnNode>();
 
 	private List<MethodInsnNode> allMethods = new ArrayList<MethodInsnNode>();
 
@@ -588,6 +588,20 @@ public class MethodFlow extends MethodNode {
 
 	public boolean isBridge() {
 		return ((this.access & ACC_VOLATILE) != 0);
+	}
+
+	@SuppressWarnings("unchecked")
+	public MethodInsnNode findOnlyCallInstruction() {
+		MethodInsnNode result = null;
+		int count = 0;
+		for (AbstractInsnNode node : ((List<AbstractInsnNode>) instructions)) {
+			if (node instanceof MethodInsnNode) {
+				result = (MethodInsnNode) node;
+				if (++count > 1)
+					return null;
+			}
+		}
+		return result;
 	}
 
 }
