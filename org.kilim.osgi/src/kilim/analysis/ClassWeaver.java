@@ -103,7 +103,8 @@ public class ClassWeaver {
             if (needsWeaving(m)) {
                 MethodWeaver mw = new MethodWeaver(this, m);
                 mw.accept(cv);
-                mw.makeNotWovenMethod(cv, m);
+                if (!m.isAbstract())
+                	mw.makeNotWovenMethod(cv, m);
             } else {
                 m.accept(cv);
             }
