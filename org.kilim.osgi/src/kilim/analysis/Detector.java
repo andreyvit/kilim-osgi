@@ -14,6 +14,7 @@ import kilim.osgi.InstrumentationHook;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 /**
  * Utility class to check if a method has been marked pausable
 
@@ -85,14 +86,21 @@ public class Detector {
 				return METHOD_NOT_FOUND;
 			}
 			ret = Detector.METHOD_NOT_PAUSABLE;
-			if (mf.visibleAnnotations != null)
-				for (Object obj : mf.visibleAnnotations) {
-					AnnotationNode an = (AnnotationNode) obj;
-					if (an.desc.equals(Constants.D_PAUSABLE)) {
-						ret = Detector.PAUSABLE_METHOD_FOUND;
-						break;
-					}
-				}
+			if (mf.isBridge()) {
+				MethodInsnNode call = mf.findOnlyCallInstruction();
+				if (call != null)
+					return getPausableStatus(call.owner, call.name, call.desc, context);
+			}
+			if (mf.isPausable())
+				ret = Detector.PAUSABLE_METHOD_FOUND;
+//			if (mf.visibleAnnotations != null)
+//				for (Object obj : mf.visibleAnnotations) {
+//					AnnotationNode an = (AnnotationNode) obj;
+//					if (an.desc.equals(Constants.D_PAUSABLE)) {
+//						ret = Detector.PAUSABLE_METHOD_FOUND;
+//						break;
+//					}
+//				}
 		}
 		return ret;
     }
