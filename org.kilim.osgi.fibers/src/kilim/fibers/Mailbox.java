@@ -85,31 +85,31 @@ public class Mailbox<T> {
         return msg;
     }
 
-//    /**
-//     * Takes an array of mailboxes and returns the index of the first mailbox
-//     * that has a message. It is possible that because of race conditions, an
-//     * earlier mailbox in the list may also have received a message.
-//     */
-//    @pausable
-//    public static int select(Mailbox... mboxes) {
-//        while (true) {
-//            for (int i = 0; i < mboxes.length; i++) {
-//                if (mboxes[i].hasMessage()) {
-//                    return i;
-//                }
-//            }
-//            Task t = Task.getCurrentTask();
-//            EmptySet_MsgAvListener pauseReason = new EmptySet_MsgAvListener(t,
-//                    mboxes);
-//            for (int i = 0; i < mboxes.length; i++) {
-//                mboxes[i].addMsgAvailableListener(pauseReason);
-//            }
-//            Task.pause(pauseReason);
-//            for (int i = 0; i < mboxes.length; i++) {
-//                mboxes[i].removeMsgAvailableListener(pauseReason);
-//            }
-//        }
-//    }
+    /**
+     * Takes an array of mailboxes and returns the index of the first mailbox
+     * that has a message. It is possible that because of race conditions, an
+     * earlier mailbox in the list may also have received a message.
+     */
+    @pausable
+    public static int select(Mailbox... mboxes) {
+        while (true) {
+            for (int i = 0; i < mboxes.length; i++) {
+                if (mboxes[i].hasMessage()) {
+                    return i;
+                }
+            }
+            Task t = Task.getCurrentTask();
+            EmptySet_MsgAvListener pauseReason = new EmptySet_MsgAvListener(t,
+                    mboxes);
+            for (int i = 0; i < mboxes.length; i++) {
+                mboxes[i].addMsgAvailableListener(pauseReason);
+            }
+            Task.pause(pauseReason);
+            for (int i = 0; i < mboxes.length; i++) {
+                mboxes[i].removeMsgAvailableListener(pauseReason);
+            }
+        }
+    }
 
     public synchronized void addSpaceAvailableListener(SpcAvListener spcOb) {
         srcs.add(spcOb);
