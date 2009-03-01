@@ -238,8 +238,8 @@ public abstract class Task implements Runnable {
      * @param the reason
      */
     @pausable
-    static void pause(PauseReason pr) {errNotWoven();}
-    static void pause(PauseReason pr, Fiber f) {
+    public static void pause(PauseReason pr) {errNotWoven();}
+    public static void pause(PauseReason pr, Fiber f) {
         if (f.pc == 0) {
             f.task.setPauseReason(pr);
         } else {
