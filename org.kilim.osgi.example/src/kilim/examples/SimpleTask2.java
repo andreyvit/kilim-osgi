@@ -24,12 +24,14 @@ public class SimpleTask2 extends Task {
     
     @pausable
     public void execute() {
+    	StringBuilder r = new StringBuilder();
         while (true) {
             String s = mb.get();
             if (s.equals("done"))
             	break;
             System.out.print(s);
+            r.append(s);
         }
-        Task.exit("Hurray"); // Strictly optional.
+        Task.exit(r.toString());
     }
 }

@@ -12,6 +12,7 @@ public class SimpleTask2Test {
 
 	@Test
 	public void simpleTask2() {
+		
         Task t = new SimpleTask2().start(Executors.newSingleThreadExecutor());
         t.informOnExit(SimpleTask2.exitmb);
         SimpleTask2.mb.putnb("Hello ");
@@ -19,7 +20,7 @@ public class SimpleTask2Test {
         SimpleTask2.mb.putnb("done");
         
         Object result = SimpleTask2.exitmb.getb().result;
-        Assert.assertEquals("Hurray", result.toString());
+        Assert.assertEquals("Hello World\n", result.toString());
 	}
 
 
