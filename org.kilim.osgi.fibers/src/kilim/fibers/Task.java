@@ -8,6 +8,7 @@ package kilim.fibers;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import kilim.ExitMsg;
@@ -19,7 +20,7 @@ import kilim.pausable;
  * provide a pausable execute method. 
  *  
  */
-public abstract class Task {
+public abstract class Task implements Runnable {
     static PauseReason         yieldReason = new YieldReason();
     /**
      * Task id, automatically generated
@@ -59,13 +60,13 @@ public abstract class Task {
      * The object responsible for handing this task to a thread
      * when the task is runnable. 
      */
-    protected Scheduler        scheduler;
+    protected Executor executor;
 
     // TODO: move into a separate timer service or into the schduler.
     final static Timer timer = new Timer(true);
 
     public Task() {
-        id = idSource.incrementAndGet();
+		id = idSource.incrementAndGet();
         fiber = new Fiber(this);
     }
     
@@ -73,24 +74,33 @@ public abstract class Task {
         return id;
     }
     
-    public void setScheduler(Scheduler s) {
-        assert s != null;
-        assert scheduler == null || s == scheduler : "Overwriting task scheduler";
-        scheduler = s;
-    }
-
     /**
-     * Used to start the task; the task doesn't resume on its own. Custom
-     * schedulers must be set (@see #setScheduler(Scheduler)) before
-     * start() is called.
-     * @return
+     * Used to start the task; the task doesn't resume on its own.
      */
-    public Task start() {
-        if (scheduler == null) {
-            setScheduler(Scheduler.getDefaultScheduler());
-        }
+    public Task start(Executor executor) {
+        if (executor == null)
+        	throw new NullPointerException("executor is null");
+        if (this.executor != null)
+        	throw new IllegalStateException("Task.start can only be called once");
+        this.executor = executor;
         resume();
         return this;
+    }
+    
+    /**
+     * Starts a task, using the caller's executor.
+     * 
+     * <p>This method is equivalent to calling <code>start(getCurrentTask().getExecutor())</code>.</p>
+     * 
+     * <p>This method is not really pausable, however it is declared as such to prevent
+     * non-pausable code from calling it.</p>
+     */
+    @pausable
+    public Task start() {
+		Task currentTask = getCurrentTask();
+		if (currentTask == null)
+			throw new IllegalStateException("Zero-argument Task.start() can only be used from another Task.");
+		return start(currentTask.executor);
     }
     
     /**
@@ -118,7 +128,7 @@ public abstract class Task {
      * This is typically called by a pauseReason to resume the task.
      */
     public void resume() {
-        if (scheduler == null) return;
+        if (executor == null) return;
         
         boolean doSchedule = false;
         // We don't check pauseReason while resuming (to verify whether
@@ -132,7 +142,7 @@ public abstract class Task {
             running = doSchedule = true;
         }
         if (doSchedule) {
-            scheduler.schedule(this);
+            executor.execute(this);
         }
     }
     
@@ -286,7 +296,7 @@ public abstract class Task {
      * execute processing (in addition to calling the execute(fiber) method
      * of the task.
      */
-    public void _runExecute() {
+    public void run() {
         Fiber f = fiber;
         boolean isDone = false; 
         try {

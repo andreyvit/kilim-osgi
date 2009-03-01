@@ -22,21 +22,6 @@ public class SimpleTask2 extends Task {
     public static Mailbox<String> mb = new Mailbox<String>();
     public static Mailbox<ExitMsg> exitmb = new Mailbox<ExitMsg>();
     
-    public static void main(String[] args) throws Exception {
-        Task t = new SimpleTask2().start();
-        t.informOnExit(exitmb);
-        mb.putnb("Hello ");
-        mb.putnb("World\n");
-        mb.putnb("done");
-        
-        exitmb.getb();
-        System.exit(0);
-    }
-
-    /**
-     * The entry point. mb.get() is a blocking call that yields
-     * the thread ("pausable")
-     */
     @pausable
     public void execute() {
         while (true) {
