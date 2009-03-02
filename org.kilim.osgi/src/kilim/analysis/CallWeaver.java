@@ -349,7 +349,7 @@ public class CallWeaver {
                     break;
                 }
             }
-            if (ivar != -1) {
+            if (false && ivar != -1) {
                 // Nice. We don't have to call fiber.getCallee(). That ref
                 // is available locally. Also, we don't need to cast it
                 // because it is the right type already
