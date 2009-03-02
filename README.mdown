@@ -30,7 +30,10 @@ are enabled in the launch configuration.
 3) Make extra sure org.eclipse.osgi and org.kilim.osgi are located
 in the same file system directory (e.g. both in the workspace folder).
 
-4) Add “-Dosgi.framework.extensions=org.kilim.osgi” to VM arguments of
+4) Recheck that the launch configuration includes org.eclipse.osgi from your workspace,
+not org.eclipse.osgi from the platform.
+
+5) Add “-Dosgi.framework.extensions=org.kilim.osgi” to VM arguments of
 your launch configuration (found on Arguments tab).
 
 
