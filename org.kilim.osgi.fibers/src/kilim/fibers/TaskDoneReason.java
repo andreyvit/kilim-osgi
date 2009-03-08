@@ -8,7 +8,7 @@ package kilim.fibers;
 
 
 public class TaskDoneReason implements PauseReason {
-    Object exitObj;
+    public final Object exitObj;
     TaskDoneReason(Object o) {exitObj = o;}
     
     public boolean isValid() {
