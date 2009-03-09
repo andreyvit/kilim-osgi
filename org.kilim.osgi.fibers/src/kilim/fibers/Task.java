@@ -116,7 +116,7 @@ public abstract class Task implements Runnable {
         int len = stes.length;
         for (int i = 0; i < len; i++) {
             StackTraceElement ste = stes[i];
-            if (ste.getMethodName().equals("_runExecute")){
+            if (ste.getMethodName().equals("run") && ste.getClassName().equals(Task.class.getName())){
                 // discounting WorkerThread.run, Task._runExecute, and Scheduler.getStackDepth
                 return i - 1;
             }
