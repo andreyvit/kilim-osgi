@@ -1,15 +1,26 @@
 Using Kilim in OSGi environment
 ===============================
 
+Kilim does continuation-passing style transformation using byte-code instrumentation.
+Based on that, Kilim implements Erland-style actor model that, according to some
+tests, performs as well as or better than Erlang itself.
 
+See http://www.malhar.net/sriram/kilim/ for more information about Kilim.
+
+Kilim OSGi brings Kilim into Eclipse world.
 Run-time code instrumentation required by Kilim can be employed in OSGi environment
 by means of so-called Adaptor Hooks. Please see [1] for more information on them.
+
+The code in this repository targets Eclipse 3.5 version of Equinox. To run it
+under Eclipse 3.4, you'll have to use Organize Imports command to import
+BundleLoader class from another package. (It's an internal Equinox class that
+Kilim OSGi uses.)
 
 
 Enabling Kilim instrumentation
 ------------------------------
 
-To instrument plugin classes with Javaflow, add the following header into the 
+To instrument plugin classes with Kilim, add the following header into the 
 bundle manifest file (META-INF/MANIFEST.MF): “Kilim-Enabled: true”.
 
 You also need to import “kilim” and “kilim.fiber” packages. Don't forget to enable
